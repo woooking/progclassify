@@ -25,7 +25,10 @@ def comment_remover(text):
 success = 0
 
 ignores = [
-    # ("71", "270.txt")
+    ("10", "696.txt"),
+    ("46", "36.txt"),
+    ("8", "1331.txt"),
+    ("80", "282.txt"),
 ]
 
 for subdir_name in os.listdir(datadir):
@@ -36,7 +39,7 @@ for subdir_name in os.listdir(datadir):
         file = subdir + "/" + file_name
         if (subdir_name, file_name) in ignores:
             continue
-        print(file)
+        # print(file)
         with open(file, errors='ignore') as f:
             code = f.read()
             parser = c_parser.CParser()
@@ -45,10 +48,9 @@ for subdir_name in os.listdir(datadir):
                 success += 1
                 # ast.show(showcoord=True)
                 graphs = ASTVisitor().visit(ast)
-                for name, graph in graphs:
-                    graph.optimize()
-                    print(name)
-                    graph.print()
+                # for name, graph in graphs:
+                #     print(name)
+                #     graph.print()
 
             except ParseError as e:
                 print("{} can not parsed".format(file))
@@ -56,6 +58,6 @@ for subdir_name in os.listdir(datadir):
             except Exception as e:
                 print(file)
                 raise e
-        exit(0)
+        # exit(0)
     print("{} completed".format(subdir_name))
 

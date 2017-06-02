@@ -1,13 +1,8 @@
 from abc import ABCMeta, abstractmethod
 
-
-class CFGBLock(metaclass=ABCMeta):
+class CFGBlock(metaclass=ABCMeta):
     def __init__(self):
-        pass
-
-    @abstractmethod
-    def optimize(self):
-        pass
+        self.preds = []
 
     @abstractmethod
     def set_next(self, next_block):
@@ -18,49 +13,40 @@ class CFGBLock(metaclass=ABCMeta):
         pass
 
 
-class Statement(CFGBLock):
-    def __init__(self, id, statement):
-        CFGBLock.__init__(self)
+class Statements(CFGBlock):
+    def __init__(self, id):
+        CFGBlock.__init__(self)
         self.id = id
-        self.statement = statement
+        self.statements = []
 
     def __repr__(self):
-        return "[Statement {}] {}".format(self.id, self.statement)
+        return "[Statements {}]".format(self.id)
 
-    def optimize(self):
-        n = self.next
-        while isinstance(n, Empty):
-            n = n.next
-        self.next = n
+    def add_statement(self, statement):
+        self.statements.append(statement)
 
     def set_next(self, next_block):
         self.next = next_block
+        next_block.preds.append(self)
 
     def print(self):
+        for s in self.statements:
+            print(s)
         print("{} -> {}".format(self, self.next))
 
 
-class Branch(CFGBLock):
+class Branch(CFGBlock):
     def __init__(self, id, var, true_block, false_block):
-        CFGBLock.__init__(self)
+        CFGBlock.__init__(self)
         self.id = id
         self.var = var
         self.true_block = true_block
         self.false_block = false_block
+        true_block.preds.append(self)
+        false_block.preds.append(self)
 
     def __repr__(self):
         return "[Branch {}] {}".format(self.id, self.var)
-
-    def optimize(self):
-        n = self.true_block
-        while isinstance(n, Empty):
-            n = n.next
-        self.true_block = n
-
-        n = self.false_block
-        while isinstance(n, Empty):
-            n = n.next
-        self.false_block = n
 
     def set_next(self, next_block):
         raise RuntimeError()
@@ -70,29 +56,21 @@ class Branch(CFGBLock):
         print("{} (false)-> {}".format(self, self.false_block))
 
 
-class Entry(CFGBLock):
+class Entry(CFGBlock):
     def __repr__(self):
         return "[Entry]"
 
-    def optimize(self):
-        n = self.next
-        while isinstance(n, Empty):
-            n = n.next
-        self.next = n
-
     def set_next(self, next_block):
         self.next = next_block
+        next_block.preds.append(self)
 
     def print(self):
         print("{} -> {}".format(self, self.next))
 
 
-class Exit(CFGBLock):
+class Exit(CFGBlock):
     def __repr__(self):
         return "[Exit]"
-
-    def optimize(self):
-        pass
 
     def set_next(self, next_block):
         raise RuntimeError()
@@ -101,39 +79,15 @@ class Exit(CFGBLock):
         pass
 
 
-class Empty(CFGBLock):
-    def __init__(self, id):
-        CFGBLock.__init__(self)
-        self.id = id
-
-    def __repr__(self):
-        return "[Empty {}]".format(self.id)
-
-    def optimize(self):
-        pass
-
-    def set_next(self, next_block):
-        self.next = next_block
-
-    def print(self):
-        print("{} -> {}".format(self, self.next))
-
-
-class Switch(CFGBLock):
-    def __init__(self, id, var, blocks):
-        CFGBLock.__init__(self)
+class Switch(CFGBlock):
+    def __init__(self, id, var):
+        CFGBlock.__init__(self)
         self.id = id
         self.var = var
-        self.blocks = blocks
+        self.blocks = []
 
     def __repr__(self):
         return "[Switch {}] {}".format(self.id, self.var)
-
-    def optimize(self):
-        for index, (_, n) in enumerate(self.blocks):
-            while isinstance(n, Empty):
-                n = n.next
-            self.blocks[index] = n
 
     def set_next(self, next_block):
         raise RuntimeError()
@@ -141,3 +95,6 @@ class Switch(CFGBLock):
     def print(self):
         for cond, body in self.blocks:
             print("{} ({})-> {}".format(self, cond, body))
+
+
+
