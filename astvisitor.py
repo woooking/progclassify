@@ -2,7 +2,7 @@ from pycparser import c_ast
 from pycparser.c_ast import *
 from cfg.cfg import CFG
 from ir.irstatement import *
-from ir.irexpression import IRConstant
+from ir.irexpression import IRConstant, IRTemp
 
 
 def transform_assignment(node: Assignment):
@@ -19,19 +19,6 @@ def transform_decl(node: Decl):
     if not node.init is None:
         return Assignment("=", ID(node.name, node.coord), node.init, node.coord)
     return node
-
-
-def transform_unary_op(node: UnaryOp):
-    if node.op == "p++":
-        return Assignment("=", node.expr, BinaryOp("+", node.expr, Constant(int, 1)), node.coord)
-    elif node.op == "p--":
-        return Assignment("=", node.expr, BinaryOp("-", node.expr, Constant(int, 1)), node.coord)
-    elif node.op == "++":
-        return Assignment("=", node.expr, BinaryOp("+", node.expr, Constant(int, 1)), node.coord)
-    elif node.op == "--":
-        return Assignment("=", node.expr, BinaryOp("-", node.expr, Constant(int, 1)), node.coord)
-    else:
-        raise RuntimeError()
 
 
 class ASTVisitor(c_ast.NodeVisitor):
@@ -73,14 +60,18 @@ class ASTVisitor(c_ast.NodeVisitor):
                 self.cfg.current_block.add_statement(point)
                 rec = point.target
             r = self.visit(node.rvalue)
-            self.cfg.current_block.add_statement(IRStructRefAssignment(rec, node.lvalue.field, r))
+            self.cfg.current_block.add_statement(IRStructRefAssignment(rec, node.lvalue.field.name, r))
         elif isinstance(node.lvalue, UnaryOp):  # *... = ...
             l = self.visit(node.lvalue.expr)
             r = self.visit(node.rvalue)
             self.cfg.current_block.add_statement(IRPointAssignment(l, r))
+        elif isinstance(node.lvalue, IRTemp):  # x = ...
+            r = self.visit(node.rvalue)
+            self.cfg.current_block.add_statement(IRAssignment(node.lvalue, r))
         else:
             node.show()
             raise NotImplementedError()
+        return r
 
     def visit_BinaryOp(self, node):
         l = self.visit(node.left)
@@ -148,8 +139,8 @@ class ASTVisitor(c_ast.NodeVisitor):
             self.cfg.current_block.set_next(cond_block)
         self.cfg.current_block = cond_block
         cond_exp = self.visit(node.cond)
-        self.cfg.seal_block(cond_block)
         branch = self.cfg.create_branch_block(cond_exp, true_block, false_block)
+        self.cfg.seal_block(cond_block)
         self.cfg.seal_block(branch)
         self.cfg.add_block(branch)
         self.cfg.seal_block(true_block)
@@ -188,34 +179,57 @@ class ASTVisitor(c_ast.NodeVisitor):
         self.cfg.add_block(entry_block)
         cond_block = self.cfg.create_basic_block()
         self.cfg.add_block(cond_block)
-        cond_exp = None
         if node.cond is not None:
             cond_exp = self.visit(node.cond)
 
-        true_block = self.cfg.create_basic_block()
-        false_block = self.cfg.create_basic_block()
-        update_block = self.cfg.create_basic_block()
-        branch = self.cfg.create_branch_block(cond_exp, true_block, false_block)
-        self.cfg.seal_block(branch)
-        self.cfg.current_block.set_next(branch)
-        self.cfg.current_block = true_block
-        self.break_blocks.append(false_block)
-        self.continue_blocks.append(update_block)
-        self.visit(node.stmt)
-
-        if self.cfg.current_block is not None:
+            true_block = self.cfg.create_basic_block()
+            false_block = self.cfg.create_basic_block()
+            update_block = self.cfg.create_basic_block()
+            branch = self.cfg.create_branch_block(cond_exp, true_block, false_block)
             self.cfg.seal_block(self.cfg.current_block)
-            self.cfg.current_block.set_next(update_block)
+            self.cfg.seal_block(branch)
+            self.cfg.current_block.set_next(branch)
+            self.cfg.current_block = true_block
+            self.break_blocks.append(false_block)
+            self.continue_blocks.append(update_block)
+            self.visit(node.stmt)
 
-        self.cfg.current_block = update_block
-        if node.next is not None:
-            self.visit(node.next)
-        self.break_blocks.pop()
-        self.continue_blocks.pop()
-        self.cfg.seal_block(update_block)
-        self.cfg.current_block.set_next(cond_block)
-        self.cfg.seal_block(entry_block)
-        self.cfg.current_block = false_block
+            if self.cfg.current_block is not None:
+                self.cfg.seal_block(self.cfg.current_block)
+                self.cfg.current_block.set_next(update_block)
+
+            self.cfg.current_block = update_block
+            if node.next is not None:
+                self.visit(node.next)
+            self.break_blocks.pop()
+            self.continue_blocks.pop()
+            self.cfg.seal_block(update_block)
+            self.cfg.current_block.set_next(entry_block)
+            self.cfg.seal_block(entry_block)
+            self.cfg.current_block = false_block
+        else:
+            true_block = self.cfg.create_basic_block()
+            false_block = self.cfg.create_basic_block()
+            update_block = self.cfg.create_basic_block()
+            self.cfg.seal_block(self.cfg.current_block)
+            self.cfg.add_block(true_block)
+            self.break_blocks.append(false_block)
+            self.continue_blocks.append(update_block)
+            self.visit(node.stmt)
+
+            if self.cfg.current_block is not None:
+                self.cfg.seal_block(self.cfg.current_block)
+                self.cfg.current_block.set_next(update_block)
+
+            self.cfg.current_block = update_block
+            if node.next is not None:
+                self.visit(node.next)
+            self.break_blocks.pop()
+            self.continue_blocks.pop()
+            self.cfg.seal_block(update_block)
+            self.cfg.current_block.set_next(entry_block)
+            self.cfg.seal_block(entry_block)
+            self.cfg.current_block = false_block
 
     def visit_FuncCall(self, node):
         if self.cfg.current_block is None:
@@ -396,22 +410,9 @@ class ASTVisitor(c_ast.NodeVisitor):
         cond = self.visit(node.cond)
         iftrue = self.visit(node.iftrue)
         iffalse = self.visit(node.iffalse)
-        temp = self.cfg.create_temp_var()
-        true_block = self.cfg.create_basic_block()
-        true_block.add_statement(IRAssignment(temp, iftrue))
-        false_block = self.cfg.create_basic_block()
-        false_block.add_statement(IRAssignment(temp, iffalse))
-        end_block = self.cfg.create_basic_block()
-        branch = self.cfg.create_branch_block(cond, true_block, false_block)
-        self.cfg.seal_block(self.cfg.current_block)
-        self.cfg.add_block(branch)
-        self.cfg.seal_block(branch)
-        self.cfg.seal_block(true_block)
-        self.cfg.seal_block(false_block)
-        true_block.set_next(end_block)
-        false_block.set_next(end_block)
-        self.cfg.current_block = end_block
-        return temp
+        s = IRTernaryOp(self.cfg, cond, iftrue, iffalse)
+        self.cfg.current_block.add_statement(s)
+        return s.target
 
     def visit_TypeDecl(self, node):
         raise NotImplementedError()
@@ -433,35 +434,39 @@ class ASTVisitor(c_ast.NodeVisitor):
             e = self.visit(node.expr)
             s = IRPoint(self.cfg, e)
         elif node.op in ['p++', 'p--', '++', '--']:
-            return self.visit(transform_unary_op(node))
+            return self.transform_unary_op(node)
         else:
             print(node.op)
             raise NotImplementedError()
+        self.cfg.current_block.add_statement(s)
+        return s.target
 
     def visit_Union(self, node):
         raise NotImplementedError()
 
     def visit_While(self, node):
         self.cfg.seal_block(self.cfg.current_block)
+        entry_block = self.cfg.create_basic_block()
+        self.cfg.add_block(entry_block)
         cond_block = self.cfg.create_basic_block()
         self.cfg.add_block(cond_block)
         cond_exp = self.visit(node.cond)
-
         true_block = self.cfg.create_basic_block()
         false_block = self.cfg.create_basic_block()
         branch = self.cfg.create_branch_block(cond_exp, true_block, false_block)
+        self.cfg.seal_block(self.cfg.current_block)
         self.cfg.seal_block(branch)
         self.cfg.current_block.set_next(branch)
         self.cfg.current_block = true_block
         self.break_blocks.append(false_block)
-        self.continue_blocks.append(cond_block)
+        self.continue_blocks.append(entry_block)
         self.visit(node.stmt)
         self.break_blocks.pop()
         self.continue_blocks.pop()
         if self.cfg.current_block is not None:
             self.cfg.seal_block(self.cfg.current_block)
-            self.cfg.current_block.set_next(cond_block)
-        self.cfg.seal_block(cond_block)
+            self.cfg.current_block.set_next(entry_block)
+        self.cfg.seal_block(entry_block)
         self.cfg.current_block = false_block
 
     def visit_Pragma(self, node):
@@ -472,6 +477,22 @@ class ASTVisitor(c_ast.NodeVisitor):
             temp = self.cfg.create_temp_var()
             self.cfg.write_var(self.extract_var(arg), self.cfg.current_block, temp)
             self.cfg.current_block.add_statement(IRInput(temp))
+
+    def transform_unary_op(self, node: UnaryOp):
+        if node.op == "p++":
+            t = self.visit(Assignment("=", self.cfg.create_temp_var(), node.expr, node.coord))
+            self.visit(Assignment("=", node.expr, BinaryOp("+", node.expr, Constant(int, 1)), node.coord))
+            return t
+        elif node.op == "p--":
+            t = self.visit(Assignment("=", self.cfg.create_temp_var(), node.expr, node.coord))
+            self.visit(Assignment("=", node.expr, BinaryOp("-", node.expr, Constant(int, 1)), node.coord))
+            return t
+        elif node.op == "++":
+            return self.visit(Assignment("=", node.expr, BinaryOp("+", node.expr, Constant(int, 1)), node.coord))
+        elif node.op == "--":
+            return self.visit(Assignment("=", node.expr, BinaryOp("-", node.expr, Constant(int, 1)), node.coord))
+        else:
+            raise RuntimeError()
 
     def extract_var(self, node):
         if isinstance(node, ID):

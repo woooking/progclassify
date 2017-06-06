@@ -1,6 +1,7 @@
-from ir.irexpression import IRTemp, IRPhi
-from ir.irstatement import IRUndef
+from ir.irexpression import IRTemp, IRExpPhi, IRPhiVar, IRUndef
+from ir.irstatement import IRPhi
 from cfg.cfgblock import *
+from config import debug
 
 
 class CFG:
@@ -28,6 +29,13 @@ class CFG:
             s.set_next(self.labels[t])
         for block in self.labels.values():
             self.seal_block(block)
+
+        for phi in self.phis:
+            opes = list(map(lambda x: x if isinstance(x, IRTemp) or isinstance(x, IRUndef) else IRPhiVar(x.id), phi.operands))
+            var = IRPhiVar(phi.id)
+            phi.block.statements.insert(0, IRPhi(var, opes))
+            for use in phi.users:
+                use.replace(phi, var)
 
     def replace(self, phi, same):
         if phi.replaced:
@@ -91,8 +99,10 @@ class CFG:
         for use in phi.users:
             use.replace(phi, same)
 
+        phi.users = []
+
         for use in phi.users:
-            if isinstance(use, IRPhi):
+            if isinstance(use, IRExpPhi):
                 self.try_remove(use)
 
         return same
@@ -100,7 +110,8 @@ class CFG:
     def seal_block(self, block):
         if not self.traverse_end and block in self.labels.values():
             return
-        # print("Block {} sealed".format(block.id))
+        if debug:
+            print("Block {} sealed".format(block.id))
         for var in self.incomplete_phis[block]:
             self.add_phi_operands(var, self.incomplete_phis[block][var])
         self.sealed_blocks.append(block)
@@ -134,7 +145,7 @@ class CFG:
     def create_phi(self, block):
         num = self.phi
         self.phi += 1
-        phi = IRPhi(num, block)
+        phi = IRExpPhi(num, block)
         self.phis.append(phi)
         return phi
 
@@ -142,11 +153,11 @@ class CFG:
         self.current_block.set_next(block)
         self.current_block = block
 
-    def print(self):
+    def print(self, f=None):
         for block in self.blocks:
-            block.print()
+            block.print(f)
 
         for phi in self.phis:
-            print("{} defined in block {}".format(phi, phi.block.id))
+            print("{} defined in block {}".format(phi, phi.block.id), file=f)
 
 

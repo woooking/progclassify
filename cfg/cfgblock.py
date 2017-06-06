@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from ir.irexpression import IRExpPhi
 
 class CFGBlock(metaclass=ABCMeta):
     def __init__(self):
@@ -9,7 +10,7 @@ class CFGBlock(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def print(self):
+    def print(self, f=None):
         pass
 
 
@@ -29,10 +30,10 @@ class Statements(CFGBlock):
         self.next = next_block
         next_block.preds.append(self)
 
-    def print(self):
+    def print(self, f=None):
         for s in self.statements:
-            print(s)
-        print("{} -> {}".format(self, self.next))
+            print(s, file=f)
+        print("{} -> {}".format(self, self.next), file=f)
 
 
 class Branch(CFGBlock):
@@ -44,6 +45,8 @@ class Branch(CFGBlock):
         self.false_block = false_block
         true_block.preds.append(self)
         false_block.preds.append(self)
+        if isinstance(var, IRExpPhi):
+            var.users.append(self)
 
     def __repr__(self):
         return "[Branch {}] {}".format(self.id, self.var)
@@ -51,9 +54,15 @@ class Branch(CFGBlock):
     def set_next(self, next_block):
         raise RuntimeError()
 
-    def print(self):
-        print("{} (true)-> {}".format(self, self.true_block))
-        print("{} (false)-> {}".format(self, self.false_block))
+    def print(self, f=None):
+        print("{} (true)-> {}".format(self, self.true_block), file=f)
+        print("{} (false)-> {}".format(self, self.false_block), file=f)
+
+    def replace(self, phi, same):
+        if isinstance(same, IRExpPhi):
+            same.users.append(self)
+        if self.var == phi:
+            self.var = same
 
 
 class Entry(CFGBlock):
@@ -64,8 +73,8 @@ class Entry(CFGBlock):
         self.next = next_block
         next_block.preds.append(self)
 
-    def print(self):
-        print("{} -> {}".format(self, self.next))
+    def print(self, f=None):
+        print("{} -> {}".format(self, self.next), file=f)
 
 
 class Exit(CFGBlock):
@@ -75,7 +84,7 @@ class Exit(CFGBlock):
     def set_next(self, next_block):
         raise RuntimeError()
 
-    def print(self):
+    def print(self, f=None):
         pass
 
 
@@ -85,6 +94,8 @@ class Switch(CFGBlock):
         self.id = id
         self.var = var
         self.blocks = []
+        if isinstance(var, IRExpPhi):
+            var.users.append(self)
 
     def __repr__(self):
         return "[Switch {}] {}".format(self.id, self.var)
@@ -92,9 +103,15 @@ class Switch(CFGBlock):
     def set_next(self, next_block):
         raise RuntimeError()
 
-    def print(self):
+    def print(self, f=None):
         for cond, body in self.blocks:
-            print("{} ({})-> {}".format(self, cond, body))
+            print("{} ({})-> {}".format(self, cond, body), file=f)
+
+    def replace(self, phi, same):
+        if isinstance(same, IRExpPhi):
+            same.users.append(self)
+        if self.var == phi:
+            self.var = same
 
 
 

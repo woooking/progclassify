@@ -1,6 +1,5 @@
 
 from abc import ABCMeta
-from cfg.cfgblock import CFGBlock
 
 class IRExpression(metaclass=ABCMeta):
     def __init__(self):
@@ -26,8 +25,22 @@ class IRTemp(IRExpression):
         return "#{}".format(self.id)
 
 
-class IRPhi(IRExpression):
-    def __init__(self, id, block: CFGBlock):
+class IRPhiVar(IRExpression):
+    def __init__(self, num):
+        IRExpression.__init__(self)
+        self.id = num
+
+    def __repr__(self):
+        return "${}".format(self.id)
+
+
+class IRUndef(IRExpression):
+    def __repr__(self):
+        return "Undef"
+
+
+class IRExpPhi(IRExpression):
+    def __init__(self, id, block):
         IRExpression.__init__(self)
         self.block = block
         self.operands = []
@@ -37,7 +50,7 @@ class IRPhi(IRExpression):
         self.replaced = False
 
     def replace(self, phi, same):
-        if isinstance(same, IRPhi):
+        if isinstance(same, IRExpPhi):
             same.users.append(self)
         for i, ope in enumerate(self.operands):
             if ope == phi:
@@ -45,7 +58,7 @@ class IRPhi(IRExpression):
 
     def add_operand(self, ope):
         self.operands.append(ope)
-        if isinstance(ope, IRPhi) and ope != self:
+        if isinstance(ope, IRExpPhi) and ope != self:
             ope.users.append(self)
 
     def __repr__(self):
