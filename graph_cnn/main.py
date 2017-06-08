@@ -6,7 +6,7 @@ from pycparser import c_parser
 from pycparser.plyparser import ParseError
 
 from graph_cnn.dfg.dfg import DFG
-from astvisitor import ASTVisitor
+from graph_cnn.astvisitor import ASTVisitor
 from config import debug, rewrite
 
 data_dir = 'ProgramData'
