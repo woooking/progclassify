@@ -55,16 +55,37 @@ class ASTVisitor(NodeVisitor):
 
         # todo: ?
 
-        if node.quals:
-            node.show()
-            raise NotImplementedError()
-        if node.storage:
-            node.show()
-            raise NotImplementedError()
-        if node.funcspec:
-            node.show()
-            raise NotImplementedError()
-        self.generic_visit(node)
+        if isinstance(node.type, FuncDecl):
+            self.visit(node.type)
+            if node.quals:
+                node.show()
+                raise NotImplementedError()
+            if node.storage:
+                node.show()
+                raise NotImplementedError()
+            if node.funcspec:
+                node.show()
+                raise NotImplementedError()
+            if node.init:
+                node.show()
+                raise NotImplementedError()
+            if node.bitsize:
+                node.show()
+                raise NotImplementedError()
+        else:
+            if node.quals:
+                node.show()
+                raise NotImplementedError()
+            if node.storage:
+                node.show()
+                raise NotImplementedError()
+            if node.funcspec:
+                node.show()
+                raise NotImplementedError()
+            if node.bitsize:
+                node.show()
+                raise NotImplementedError()
+            self.generic_visit(node)
 
     def visit_Declist(self, node):
         node.show()
