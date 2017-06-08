@@ -1,7 +1,8 @@
 from pycparser import c_ast
 from pycparser.c_ast import *
-from cfg.cfg import CFG
-from ir.irstatement import *
+
+from graph_cnn.cfg.cfg import CFG
+from graph_cnn.ir.irstatement import *
 from ir.irexpression import IRConstant, IRTemp
 
 

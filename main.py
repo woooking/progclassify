@@ -1,12 +1,13 @@
 import os
 import re
+import pickle
 
-from dfg.dfg import DFG
-from astvisitor import ASTVisitor
 from pycparser import c_parser
 from pycparser.plyparser import ParseError
+
+from graph_cnn.dfg.dfg import DFG
+from astvisitor import ASTVisitor
 from config import debug, rewrite
-import pickle
 
 data_dir = 'ProgramData'
 graph_dir = 'graph'
