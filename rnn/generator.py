@@ -47,11 +47,11 @@ class BatchGenerator:
 	def __init__(self, batch_size):
 		self.batch_size = batch_size
 		self.nums = [[] for _ in range(104)]
-		for i in range(1, 105):
+		for i in range(104):
 			data_subdir = data_dir + "/" + str(i)
 			for file_name in os.listdir(data_subdir):
 				num = int(file_name[:-4])
-				self.nums[i - 1].append(num)
+				self.nums[i].append(num)
 
 		self.trains = [None] * 104
 		self.tests = [None] * 104
