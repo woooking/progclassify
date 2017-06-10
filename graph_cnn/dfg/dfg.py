@@ -1,5 +1,5 @@
 
-from graph_cnn.cfg import Statements, Entry, Exit, Branch, Switch
+from graph_cnn.cfg.cfgblock import Statements, Entry, Exit, Branch, Switch
 from graph_cnn.ir.irstatement import *
 from graph_cnn.ir.irexpression import *
 from graph_cnn.dfg.dfgblock import *

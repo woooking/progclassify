@@ -1,8 +1,8 @@
-int main()
 struct d{
 	int x;
 	int y;
 	int z;};
+int main()
 {
 	struct d s[10];
 	int n,i,j,k=0,d;
