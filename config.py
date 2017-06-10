@@ -16,5 +16,6 @@ word_embedding_rnn_config = {
     "embedding_size": 128,
     "number_sampled": 64,
     "word_embedding_steps": 100000,
-    "rnn_hidden_size": 100
+    "rnn_hidden_size": 100,
+    "learning_rate": 1e-3,
 }

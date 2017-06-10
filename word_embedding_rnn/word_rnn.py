@@ -6,6 +6,7 @@ from config import word_embedding_rnn_config
 
 input_size = word_embedding_rnn_config["embedding_size"]
 hidden_size = word_embedding_rnn_config["rnn_hidden_size"]
+learning_rate = word_embedding_rnn_config["learning_rate"]
 
 
 class WordRNN:
@@ -24,8 +25,10 @@ class WordRNN:
 
         self.logits = tf.matmul(output, self.w) + self.b
 
-        self.cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.label, logits=self.logits))
-        self.train_step = tf.train.AdamOptimizer(1e-4).minimize(self.cross_entropy)
+        self.cross_entropy = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits(labels=self.label, logits=self.logits)
+        )
+        self.train_step = tf.train.AdamOptimizer(learning_rate).minimize(self.cross_entropy)
         self.correct_prediction = tf.equal(tf.argmax(self.logits, 1), tf.argmax(self.label, 1))
         self.accuracy = tf.reduce_mean(tf.cast(self.correct_prediction, tf.float32))
 
