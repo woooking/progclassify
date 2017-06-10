@@ -18,9 +18,9 @@ class WordRNN:
         self.w = new_variable([hidden_size, 104])
         self.b = new_variable([104])
 
-        self.outputs, self.last_state = tf.nn.dynamic_rnn(cell=self.lstm, inputs=self.x, dtype=tf.float32)
+        self.outputs, self.last_state = tf.nn.dynamic_rnn(cell=self.lstm, inputs=self.input, dtype=tf.float32)
         self.s = tf.shape(self.outputs)
-        output = tf.reshape(tf.slice(self.outputs, [0, s[1] - 1, 0], [-1, -1, -1]), [1, hidden_size])
+        output = tf.reshape(tf.slice(self.outputs, [0, self.s[1] - 1, 0], [-1, -1, -1]), [1, hidden_size])
 
         self.logits = tf.matmul(output, self.w) + self.b
 
@@ -31,26 +31,26 @@ class WordRNN:
 
         self.init = tf.global_variables_initializer()
 
+        self.generator = Generator()
+
     def train(self):
-        generator = BatchGenerator(batch_size)
         with tf.Session() as sess:
             sess.run(self.init)
 
             for i in range(10000):
                 for _ in range(50):
-                    data, label = generator.next_batch(True)
+                    data, label = self.generator.next_batch(True)
                     self.train_step.run(feed_dict={self.input: data, self.label: label})
                 if i % 20 == 0:
                     print("===== train step {} =====".format(i))
-                    run_test()
+                    self.run_test()
 
-
-def run_test():
-    result = 0
-    for _ in range(200):
-        data, label = generator.next_batch(False)
-        result += accuracy.eval(feed_dict={x: data, y: label})
-    print("test accuracy: {}".format(result / 200))
+    def run_test(self):
+        result = 0
+        for _ in range(200):
+            data, label = self.generator.next_batch(False)
+            result += self.accuracy.eval(feed_dict={self.input: data, self.label: label})
+        print("test accuracy: {}".format(result / 200))
 
 
 

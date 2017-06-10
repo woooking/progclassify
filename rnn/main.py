@@ -4,7 +4,7 @@ from rnn.generator import BatchGenerator
 
 
 def new_variable(shape):
-	return tf.Variable(tf.random_normal(shape))
+    return tf.Variable(tf.random_normal(shape))
 
 
 input_size = 96
@@ -37,20 +37,20 @@ generator = BatchGenerator(batch_size)
 
 
 def run_test():
-	result = 0
-	for _ in range(200):
-		data, label = generator.next_batch(False)
-		result += accuracy.eval(feed_dict={x: data, y: label})
-	print("test accuracy: {}".format(result / 200))
+    result = 0
+    for _ in range(200):
+        data, label = generator.next_batch(False)
+        result += accuracy.eval(feed_dict={x: data, y: label})
+    print("test accuracy: {}".format(result / 200))
 
 
 with tf.Session() as sess:
-	sess.run(init)
+    sess.run(init)
 
-	for i in range(10000):
-		for _ in range(50):
-			data, label = generator.next_batch(True)
-			train_step.run(feed_dict={x: data, y: label})
-		if i % 20 == 0:
-			print("===== train step {} =====".format(i))
-			run_test()
+    for i in range(10000):
+        for _ in range(50):
+            data, label = generator.next_batch(True)
+            train_step.run(feed_dict={x: data, y: label})
+        if i % 20 == 0:
+            print("===== train step {} =====".format(i))
+            run_test()
