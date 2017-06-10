@@ -5,7 +5,12 @@ debug = False
 rewrite = True
 # rewrite = False
 
-wordembedding_rnn_config = {
+rnn_config = {
+    "input_size": 96,
+    "hidden_size": 100,
+}
+
+word_embedding_rnn_config = {
     "window_size": 2,
     "batch_size": 50,
     "embedding_size": 128,

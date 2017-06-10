@@ -25,13 +25,20 @@ class Generator:
             self.tests[i] = list(map(lambda x: x[0], filter(lambda x: not x[1], zip_list)))
 
     def next_batch(self, train):
-        data = []
-        label = []
         cls = random.randrange(0, 104)
         num = random.choice(self.trains[cls]) if train else random.choice(self.tests[cls])
         l = list(map(lambda x: self.word_embedding.predict(x), self.word_sequence.data[(cls + 1, num)]))
         h = [0] * 104
         h[cls] = 1
-        data.append(l)
-        label.append(h)
+        data = [l]
+        label = [h]
         return data, label
+
+    def test_cases(self):
+        for (cls, num) in self.word_sequence.data:
+            l = list(map(lambda x: self.word_embedding.predict(x), self.word_sequence.data[(cls, num)]))
+            h = [0] * 104
+            h[cls] = 1
+            data = [l]
+            label = [h]
+            yield data, label

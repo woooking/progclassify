@@ -1,14 +1,14 @@
 import tensorflow as tf
 
-from word_embedding_rnn.generator import Generator
+from rnn.generator import Generator
 from util.util import new_variable
-from config import word_embedding_rnn_config
+from config import rnn_config
 
-input_size = word_embedding_rnn_config["embedding_size"]
-hidden_size = word_embedding_rnn_config["rnn_hidden_size"]
+input_size = rnn_config["input_size"]
+hidden_size = rnn_config["hidden_size"]
 
 
-class WordRNN:
+class RNN:
     def __init__(self):
         self.input = tf.placeholder(tf.float32, [1, None, input_size])
         self.label = tf.placeholder(tf.float32, [1, 104])
@@ -18,11 +18,11 @@ class WordRNN:
         self.w = new_variable([hidden_size, 104])
         self.b = new_variable([104])
 
-        self.outputs, self.last_state = tf.nn.dynamic_rnn(cell=self.lstm, inputs=self.input, dtype=tf.float32)
+        self.outputs, self.last_state = tf.nn.dynamic_rnn(cell=self.lstm, inputs=self.x, dtype=tf.float32)
         self.s = tf.shape(self.outputs)
-        output = tf.reshape(tf.slice(self.outputs, [0, self.s[1] - 1, 0], [-1, -1, -1]), [1, hidden_size])
+        self.output = tf.reshape(tf.slice(self.outputs, [0, self.s[1] - 1, 0], [-1, -1, -1]), [1, hidden_size])
 
-        self.logits = tf.matmul(output, self.w) + self.b
+        self.logits = tf.matmul(self.output, self.w) + self.b
 
         self.cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=self.label, logits=self.logits))
         self.train_step = tf.train.AdamOptimizer(1e-4).minimize(self.cross_entropy)
@@ -46,11 +46,11 @@ class WordRNN:
                 if i % 20 == 0:
                     print("===== train step {} =====".format(i))
                     self.run_test()
-            self.saver.save(sess, "model/word_embedding_rnn")
+            self.saver.save(sess, "model/rnn")
 
     def test(self):
         with tf.Session() as sess:
-            self.saver.restore(sess, "model/word_embedding_rnn")
+            self.saver.restore(sess, "model/rnn")
             result = 0
             num = 0
             for data, label in self.generator.test_cases():
@@ -62,5 +62,8 @@ class WordRNN:
         result = 0
         for _ in range(200):
             data, label = self.generator.next_batch(False)
-            result += self.accuracy.eval(feed_dict={self.input: data, self.label: label})
+            result += self.accuracy.eval(feed_dict={x: data, y: label})
         print("test accuracy: {}".format(result / 200))
+
+
+

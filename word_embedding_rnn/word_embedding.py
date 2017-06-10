@@ -3,13 +3,13 @@ import pickle
 import collections
 import tensorflow as tf
 import numpy as np
-from config import wordembedding_rnn_config
+from config import word_embedding_rnn_config
 from word_embedding_rnn.word_sequence import WordSequence
 
-batch_size = wordembedding_rnn_config["batch_size"]
-embedding_size = wordembedding_rnn_config["embedding_size"]
-window_size = wordembedding_rnn_config["window_size"]
-num_sampled = wordembedding_rnn_config["number_sampled"]
+batch_size = word_embedding_rnn_config["batch_size"]
+embedding_size = word_embedding_rnn_config["embedding_size"]
+window_size = word_embedding_rnn_config["window_size"]
+num_sampled = word_embedding_rnn_config["number_sampled"]
 
 
 def pair_generator(data):

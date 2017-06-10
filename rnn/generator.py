@@ -1,51 +1,14 @@
 import os
 import random
-import re
+from util.util import comment_remover
+from config import rnn_config
 
 data_dir = "ProgramData"
-input_size = 96
+input_size = rnn_config["input_size"]
 
 
-def comment_remover(text):
-    def replacer(match):
-        s = match.group(0)
-        if s.startswith('/'):
-            return ""
-        else:
-            return s
-
-    pattern = re.compile(
-        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-        re.DOTALL | re.MULTILINE
-    )
-    return re.sub(pattern, replacer, text)
-
-
-def char2id(c):
-    if 32 <= ord(c) <= 126:
-        return ord(c) - 32
-    elif ord(c) == ord("\n"):
-        return 95
-    elif ord(c) == ord("\t"):
-        return None
-    else:
-        print(c)
-        print(ord(c))
-        raise NotImplementedError
-
-
-def one_hot(c):
-    if c is None:
-        return None
-
-    l = [0] * input_size
-    l[c] = 1
-    return l
-
-
-class BatchGenerator:
-    def __init__(self, batch_size):
-        self.batch_size = batch_size
+class Generator:
+    def __init__(self):
         self.nums = [[] for _ in range(104)]
         for i in range(104):
             data_subdir = data_dir + "/" + str(i)
@@ -68,20 +31,30 @@ class BatchGenerator:
     def next_batch(self, train):
         data = []
         label = []
-        for _ in range(self.batch_size):
-            l, cls = self.gen_one(train)
-            h = [0] * 104
-            h[cls] = 1
-            data.append(l)
-            label.append(h)
+        l, cls = self.gen_one(train)
+        h = [0] * 104
+        h[cls] = 1
+        data.append(l)
+        label.append(h)
         return data, label
 
     def gen_one(self, train):
         cls = random.randrange(0, 104)
-        num = random.choice(self.trains[cls]) if train else random.choice(self.trains[cls])
+        num = random.choice(self.trains[cls]) if train else random.choice(self.tests[cls])
         code = self.load_file(cls, num)
-        l = list(filter(lambda x: x is not None, map(lambda c: one_hot(char2id(c)), code)))
+        l = list(filter(lambda x: x is not None, map(lambda c: self.one_hot(self.char2id(c)), code)))
         return l, cls
+
+    def test_cases(self):
+        for cls in range(104):
+            for num in self.tests[cls]:
+                code = self.load_file(cls, num)
+                l = list(filter(lambda x: x is not None, map(lambda c: self.one_hot(self.char2id(c)), code)))
+                h = [0] * 104
+                h[cls] = 1
+                data = [l]
+                label = [h]
+                yield data, label
 
     def load_file(self, cls, num):
         if (cls, num) in self.cache:
@@ -93,3 +66,21 @@ class BatchGenerator:
             code = comment_remover(code)
             self.cache[(cls, num)] = code
             return code
+
+    @staticmethod
+    def char2id(c):
+        if 32 <= ord(c) <= 126:
+            return ord(c) - 32
+        elif ord(c) == ord("\n"):
+            return 95
+        elif ord(c) == ord("\t"):
+            return None
+
+    @staticmethod
+    def one_hot(c):
+        if c is None:
+            return None
+
+        l = [0] * input_size
+        l[c] = 1
+        return l
