@@ -3,13 +3,15 @@ import pickle
 import collections
 import tensorflow as tf
 import numpy as np
-from config import word_embedding_rnn_config
-from word_embedding_rnn.word_sequence import WordSequence
+import sys
+sys.path.append("..")
+from config import token_embedding_rnn_config
+from token_rnn.token_sequence import TokenSequence
 
-batch_size = word_embedding_rnn_config["batch_size"]
-embedding_size = word_embedding_rnn_config["embedding_size"]
-window_size = word_embedding_rnn_config["window_size"]
-num_sampled = word_embedding_rnn_config["number_sampled"]
+batch_size = token_embedding_rnn_config["batch_size"]
+embedding_size = token_embedding_rnn_config["embedding_size"]
+window_size = token_embedding_rnn_config["window_size"]
+num_sampled = token_embedding_rnn_config["number_sampled"]
 
 
 def pair_generator(data):
@@ -93,11 +95,11 @@ class TokenEmbedding:
                     print("Average loss at step ", step, ": ", average_loss)
                     average_loss = 0
             self.final_embeddings = self.normalized_embeddings.eval()
-            with open("model/token_embedding", "wb") as f:
+            with open("../model/token_embedding", "wb") as f:
                 pickle.dump(self.final_embeddings, f)
 
     def load(self):
-        with open("model/token_embedding", "rb") as f:
+        with open("../model/token_embedding", "rb") as f:
             self.final_embeddings = pickle.load(f)
 
     def predict(self, num):
