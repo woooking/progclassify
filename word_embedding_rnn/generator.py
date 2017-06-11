@@ -8,7 +8,7 @@ class Generator:
         self.word_sequence = WordSequence()
         self.word_sequence.load()
         self.word_embedding = WordEmbedding(len(self.word_sequence.dictionary))
-        self.word_embedding.load()
+        self.word_embedding.load("model/word_embedding")
 
         self.nums = [[] for _ in range(104)]
         for (cls, num) in self.word_sequence.data:

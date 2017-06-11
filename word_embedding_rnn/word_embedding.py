@@ -72,7 +72,7 @@ class WordEmbedding:
 
         self.final_embeddings = None
 
-    def train(self, data, num_steps):
+    def train(self, data, num_steps, file_name):
         generator = batch_generator(data)
 
         with tf.Session() as sess:
@@ -93,11 +93,11 @@ class WordEmbedding:
                     print("Average loss at step ", step, ": ", average_loss)
                     average_loss = 0
             self.final_embeddings = self.normalized_embeddings.eval()
-            with open("model/word_embedding", "wb") as f:
+            with open(file_name, "wb") as f:
                 pickle.dump(self.final_embeddings, f)
 
-    def load(self):
-        with open("model/word_embedding", "rb") as f:
+    def load(self, file_name):
+        with open(file_name, "rb") as f:
             self.final_embeddings = pickle.load(f)
 
     def predict(self, num):
@@ -111,4 +111,4 @@ if __name__ == "__main__":
     word_sequence = WordSequence()
     word_sequence.load()
     word_embedding = WordEmbedding(len(word_sequence.dictionary))
-    word_embedding.train(word_sequence.data, word_embedding_rnn_config["word_embedding_steps"])
+    word_embedding.train(word_sequence.data, word_embedding_rnn_config["word_embedding_steps"], "model/word_embedding")
