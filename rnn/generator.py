@@ -10,11 +10,11 @@ input_size = rnn_config["input_size"]
 class Generator:
     def __init__(self):
         self.nums = [[] for _ in range(104)]
-        for i in range(104):
+        for i in range(1, 105):
             data_subdir = data_dir + "/" + str(i)
             for file_name in os.listdir(data_subdir):
                 num = int(file_name[:-4])
-                self.nums[i].append(num)
+                self.nums[i - 1].append(num)
 
         self.trains = [None] * 104
         self.tests = [None] * 104
@@ -22,7 +22,7 @@ class Generator:
         for i in range(104):
             rand_list = [True] * 400 + [False] * 100
             random.shuffle(rand_list)
-            zip_list = zip(self.nums[i], rand_list)
+            zip_list = list(zip(self.nums[i], rand_list))
             self.trains[i] = list(map(lambda x: x[0], filter(lambda x: x[1], zip_list)))
             self.tests[i] = list(map(lambda x: x[0], filter(lambda x: not x[1], zip_list)))
 

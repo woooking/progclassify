@@ -7,6 +7,8 @@ from config import word_embedding_rnn_config
 input_size = word_embedding_rnn_config["embedding_size"]
 hidden_size = word_embedding_rnn_config["rnn_hidden_size"]
 learning_rate = word_embedding_rnn_config["learning_rate"]
+epoch = word_embedding_rnn_config["epoch"]
+epoch_size = word_embedding_rnn_config["epoch_size"]
 
 
 class WordRNN:
@@ -42,8 +44,8 @@ class WordRNN:
         with tf.Session() as sess:
             sess.run(self.init)
 
-            for i in range(10000):
-                for _ in range(50):
+            for i in range(epoch):
+                for _ in range(epoch_size):
                     data, label = self.generator.next_batch(True)
                     self.train_step.run(feed_dict={self.input: data, self.label: label})
                 if i % 20 == 0:
@@ -59,7 +61,9 @@ class WordRNN:
             for data, label in self.generator.test_cases():
                 result += self.accuracy.eval(feed_dict={self.input: data, self.label: label})
                 num += 1
-            print("Result {} / {}, Accuracy: {}".format(num, result, result / num))
+                if num % 100 == 0:
+                    print("Average accuracy for {} cases: {}".format(num, result / num))
+            print("Result {} / {}, Accuracy: {}".format(result, num, result / num))
 
     def run_test(self):
         result = 0

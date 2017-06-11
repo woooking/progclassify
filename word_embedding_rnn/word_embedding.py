@@ -111,4 +111,4 @@ if __name__ == "__main__":
     word_sequence = WordSequence()
     word_sequence.load()
     word_embedding = WordEmbedding(len(word_sequence.dictionary))
-    word_embedding.train(word_sequence.data, wordembedding_rnn_config["word_embedding_steps"])
+    word_embedding.train(word_sequence.data, word_embedding_rnn_config["word_embedding_steps"])

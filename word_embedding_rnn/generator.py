@@ -35,10 +35,11 @@ class Generator:
         return data, label
 
     def test_cases(self):
-        for (cls, num) in self.word_sequence.data:
-            l = list(map(lambda x: self.word_embedding.predict(x), self.word_sequence.data[(cls, num)]))
-            h = [0] * 104
-            h[cls] = 1
-            data = [l]
-            label = [h]
-            yield data, label
+        for cls in range(104):
+            for num in self.tests[cls]:
+                l = list(map(lambda x: self.word_embedding.predict(x), self.word_sequence.data[(cls + 1, num)]))
+                h = [0] * 104
+                h[cls] = 1
+                data = [l]
+                label = [h]
+                yield data, label
