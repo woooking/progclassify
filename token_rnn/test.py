@@ -4,6 +4,7 @@ import tokenize
 import re
 
 data_dir = "../ProgramData"
+global_tokens = set()
 
 def token_genrator(file):
     fopen = open(file, errors="ignore")
@@ -12,8 +13,6 @@ def token_genrator(file):
     str = io.StringIO(str)
     tokens = tokenize.generate_tokens(str.readline)
     return tokens
-
-global_tokens = set()
 
 def comment_remover(text):
     def replacer(match):

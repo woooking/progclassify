@@ -1,6 +1,9 @@
 import io
 import os
 import tokenize
+import sys
+sys.path.append("..")
+from util.util import comment_remover
 
 data_dir = "ProgramData"
 input_size = 96
@@ -83,8 +86,11 @@ class Generator:
         l[c] = 1
         return l
 
-	@staticmethod
-	def token_genrator(file):
-		fopen = open(file, 'r')
-		tokens = tokenize.generate_tokens(fopen.readline)
-		return tokens
+    @staticmethod
+    def token_generator(file):
+        fopen = open(file, errors="ignore")
+        str = fopen.read()
+        str = comment_remover(str)
+        str = io.StringIO(str)
+        tokens = tokenize.generate_tokens(str.readline)
+        return tokens
