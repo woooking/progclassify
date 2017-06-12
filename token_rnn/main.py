@@ -1,4 +1,4 @@
-from token_embedding_rnn.word_rnn import TokenRNN
+from token_rnn import TokenRNN
 
 token_rnn = TokenRNN()
 # word_rnn.train()

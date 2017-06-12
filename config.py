@@ -26,11 +26,11 @@ word_embedding_rnn_config = {
 }
 
 token_embedding_rnn_config = {
-    "window_size": 2,
+    "window_size": 5,
     "batch_size": 50,
     "embedding_size": 128,
     "number_sampled": 64,
-    "token_embedding_steps": 60000,
+    "token_embedding_steps": 100000,
     "rnn_hidden_size": 100,
     "learning_rate": 1e-3,
     "epoch": 10000,

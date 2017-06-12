@@ -6,7 +6,7 @@ class Generator:
     def __init__(self):
         self.token_sequence = TokenSequence()
         self.token_sequence.load()
-        self.token_embedding = WordEmbedding(len(self.token_sequence.dictionary))
+        self.token_embedding = TokenEmbedding(len(self.token_sequence.dictionary))
         self.token_embedding.load()
 
         self.nums = [[] for _ in range(104)]

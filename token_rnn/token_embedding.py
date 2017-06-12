@@ -4,9 +4,9 @@ import collections
 import tensorflow as tf
 import numpy as np
 import sys
+from token_sequence import TokenSequence
 sys.path.append("..")
 from config import token_embedding_rnn_config
-from token_rnn.token_sequence import TokenSequence
 
 batch_size = token_embedding_rnn_config["batch_size"]
 embedding_size = token_embedding_rnn_config["embedding_size"]

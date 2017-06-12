@@ -1,6 +1,8 @@
+import io
 import os
 import pickle
 import sys
+import tokenize
 sys.path.append("..")
 from util.util import comment_remover
 
@@ -13,7 +15,7 @@ def token_generator(file):
         tokens = list(tokenize.generate_tokens(str.readline))
     except IndentationError:
         print("IndentationErrot in Original Cpp File")
-        return []
+        return list(tokenize.generate_tokens(io.StringIO('void main() {}').readline))
     return tokens
     
 class TokenSequence:
@@ -57,7 +59,7 @@ class TokenSequence:
             self.data = obj["data"]
             self.dictionary = obj["dictionary"]
 
-'''if __name__ == "__main__":
+if __name__ == "__main__":
     tok_seq = TokenSequence()
     tok_seq.build("../ProgramData")
-    tok_seq.save()'''
+    tok_seq.save()
