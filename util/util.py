@@ -1,5 +1,3 @@
-__author__ = 'woooking'
-
 import re
 import tensorflow as tf
 

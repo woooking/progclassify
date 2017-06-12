@@ -35,9 +35,12 @@ class RNN:
 
         self.init = tf.global_variables_initializer()
 
-        self.saver = tf.train.Saver()
-
         self.generator = Generator()
+
+        self.train_data = tf.constant(self.generator.trains)
+        self.test_data = tf.constant(self.generator.tests)
+
+        self.saver = tf.train.Saver()
 
     def train(self):
         with tf.Session() as sess:
@@ -55,6 +58,8 @@ class RNN:
     def test(self):
         with tf.Session() as sess:
             self.saver.restore(sess, "model/rnn")
+            self.generator.trains = self.train_data.eval()
+            self.generator.tests = self.test_data.eval()
             result = 0
             num = 0
             for data, label in self.generator.test_cases():
