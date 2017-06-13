@@ -23,7 +23,8 @@ def batch_generator(batch_size, flag):
 	data, labels = [], []
 	for _ in range(batch_size):
 		instance, label = generator.next_batch(flag)
-		flat = np.array(instance[0]).flatten()
+		instance = np.array(instance[0])
+		flat = instance[np.where( instance != 0)]
 		#print(len(flat))
 		#print(instance)
 		#print(np.lib.pad(instance, (0, maxL - len(instance)), 'constant'))
@@ -83,9 +84,9 @@ def train():
 				print(res[1])
 				testX, testY = batch_generator(200, False)
 				print(accuracy.eval(feed_dict={X: testX, Y: testY,  p_drop: 1.0}))
-			saver.save(sess, "../model/word_embedding_ffnn")
+			#saver.save(sess, "../model/word_embedding_ffnn")
 			if _ % 10000 == 0 and _ != 0:
-				saver.save(sess, "../model/word_embedding_ffnn")
+				#saver.save(sess, "../model/word_embedding_ffnn")
 				result = 0.0
 				num = 0
 				for d, l in generator.test_cases():
@@ -105,7 +106,7 @@ def train():
 
 def test():
 	with tf.Session() as sess:
-		saver.restore(sess, "../model/word_embedding_gd")
+		saver.restore(sess, "../model/word_embedding_ffnn")
 		result, num = 0.0, 0
 		for d, l in generator.test_cases():
 			testX, testY = [], []
@@ -124,4 +125,4 @@ def test():
 
 if __name__ == '__main__':
 	train()
-	test()
+	#test()
