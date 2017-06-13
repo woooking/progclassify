@@ -67,7 +67,7 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 with tf.Session() as sess:
 	tf.global_variables_initializer().run()
 	for _ in range(10001):
-		trainX, trainY = batch_generator(32, True)
+		trainX, trainY = batch_generator(64, True)
 		res = sess.run([optimizer, loss], feed_dict={X: trainX, Y: trainY})
 		#val = model.fit_batch(feed_dicts={X: trainX, Y: trainY})
 		if _ % 10 == 0:
