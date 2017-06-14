@@ -44,6 +44,9 @@ def batch_generator(batch_size, flag):
 	return instances, labels
 
 
+#train_data = tf.constant(generator.trains)
+test_data = tf.Variable(tf.constant(generator.tests))
+
 X = input_data(shape=[None, 1000, 128], name='input')
 Y = input_data(shape=[None, 104], name='Y')
 branch1 = conv_1d(X, 128, 3, padding='valid', activation='relu', regularizer="L2")
@@ -68,9 +71,16 @@ saver = tf.train.Saver()
 def test(restore=False, sess=None):
 	if restore:
 		sess = tf.Session()
-		saver.restore(sess, "../model/word_embedding_cnn")
+		saver.restore(sess, "cnn/cnnmodel/word_embedding_cnn")
+		#print(sess.run(test_data))
+		#print(generator.tests)
+		#generator.trains = train_data.eval(session=sess)
+		generator.tests = test_data.eval(session=sess)
+		#print(generator.tests)
 	result = 0.0
 	num = 0
+	#print(generator.trains)
+	#print(generator.tests)
 	for d, l in generator.test_cases():
 		testX, testY = [], []
 		data = np.array(d[0])
@@ -90,8 +100,10 @@ def test(restore=False, sess=None):
 
 def train():
 	with tf.Session() as sess:
-		tf.global_variables_initializer().run()
-		maxAcc = 0.97
+		sess.run(tf.global_variables_initializer())
+		#saver.restore(sess, "cnn/cnnmodel/word_embedding_cnn")
+		sess.run(test_data)
+		maxAcc = 0.976
 		for _ in range(20001):
 			trainX, trainY = batch_generator(64, True)
 			res = sess.run([optimizer, loss], feed_dict={X: trainX, Y: trainY})
@@ -105,8 +117,4 @@ def train():
 				acc = test(sess=sess)
 				if acc > maxAcc:
 					maxAcc = acc
-					saver.save(sess, "../model/word_embedding_cnn")
-
-if __name__ == '__main__':
-	#train()
-	test(restore=True)
+					saver.save(sess, "cnn/cnnmodel/word_embedding_cnn")
