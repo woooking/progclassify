@@ -108,5 +108,5 @@ def train():
 					saver.save(sess, "../model/word_embedding_cnn")
 
 if __name__ == '__main__':
-	train()
-	#test(restore=True)
+	#train()
+	test(restore=True)
